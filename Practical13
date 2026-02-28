@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+void main() {
+
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SQLite Todo App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const TodoListScreen(),
+    );
+  }
+}
+
+// Модель данных Todo
+class Todo {
+  final int? id;
+  final String title;
+  final bool isDone;
+
+  Todo({this.id, required this.title, this.isDone = false});
+
+  // Преобразование в Map для записи в базу
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'isDone': isDone ? 1 : 0,
+    };
+  }
+
+  // Создание объекта из Map (чтение из базы)
+  factory Todo.fromMap(Map<String, dynamic> map) {
+    return Todo(
+      id: map['id'],
+      title: map['title'],
+      isDone: map['isDone'] == 1,
+    );
+  }
+}
+
+// Помощник для работы с базой данных
+class DatabaseHelper {
+  static Database? _database;
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB();
+    return _database!;
+  }
+
+  Future<Database> _initDB() async {
+    String path = join(await getDatabasesPath(), 'todo_list.db');
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) {
+        return db.execute(
+          'CREATE TABLE todos(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, isDone INTEGER)',
+        );
+      },
+    );
+  }
+
+  Future<void> insertTodo(Todo todo) async {
+    final db = await database;
+    await db.insert('todos', todo.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Todo>> getTodos() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('todos');
+    return List.generate(maps.length, (i) => Todo.fromMap(maps[i]));
+  }
+
+  Future<void> deleteTodo(int id) async {
+    final db = await database;
+    await db.delete('todos', where: 'id = ?', whereArgs: [id]);
+  }
+}
+
+class TodoListScreen extends StatefulWidget {
+  const TodoListScreen({super.key});
+
+  // Изменено: Используем TodoListScreenState без подчеркивания,
+  // чтобы избежать ошибки "Invalid use of a private type in a public API"
+  @override
+  TodoListScreenState createState() => TodoListScreenState();
+}
+
+// Убрали '_' перед названием класса, сделав его публичным
+class TodoListScreenState extends State<TodoListScreen> {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<Todo> _todos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTodos();
+  }
+
+  // Метод для получения свежих данных из БД
+  void _refreshTodos() async {
+    final data = await _dbHelper.getTodos();
+    if (!mounted) return; // Проверка, что виджет еще в дереве
+    setState(() {
+      _todos = data;
+    });
+  }
+
+  // Метод для добавления тестовой записи
+  void _addTodo() async {
+    final newTodo = Todo(
+      title: 'Задача #${_todos.length + 1} (${DateTime.now().minute}:${DateTime.now().second})',
+    );
+    await _dbHelper.insertTodo(newTodo);
+    _refreshTodos();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('SQLite Todo List')),
+      body: _todos.isEmpty
+          ? const Center(child: Text('Список пока пуст'))
+          : ListView.builder(
+        itemCount: _todos.length,
+        itemBuilder: (context, index) {
+          final item = _todos[index];
+          return ListTile(
+            title: Text(item.title),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () async {
+                if (item.id != null) {
+                  await _dbHelper.deleteTodo(item.id!);
+                  _refreshTodos();
+                }
+              },
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addTodo,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
