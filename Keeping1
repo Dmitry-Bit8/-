@@ -1,0 +1,182 @@
+import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+void main() {
+  runApp(const MaterialApp(
+    home: TodoApp(),
+    debugShowCheckedModeBanner: false,
+  ));
+}
+
+class Todo {
+  final int? id;
+  final String title;
+
+  Todo({this.id, required this.title});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+    };
+  }
+
+  factory Todo.fromMap(Map<String, dynamic> map) {
+    return Todo(
+      id: map['id'],
+      title: map['title'],
+    );
+  }
+}
+
+class DatabaseHelper {
+  static final DatabaseHelper instance = DatabaseHelper._init();
+  static Database? _database;
+
+  DatabaseHelper._init();
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB('todo_list.db');
+    return _database!;
+  }
+
+  Future<Database> _initDB(String filePath) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
+  }
+
+  Future _createDB(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE todos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<int> createTodo(Todo todo) async {
+    final db = await instance.database;
+    return await db.insert('todos', todo.toMap());
+  }
+
+  Future<List<Todo>> readAllTodos() async {
+    final db = await instance.database;
+    final result = await db.query('todos');
+    return result.map((json) => Todo.fromMap(json)).toList();
+  }
+
+  Future<int> deleteTodo(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'todos',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+}
+
+class TodoApp extends StatefulWidget {
+  const TodoApp({super.key});
+
+  @override
+  State<TodoApp> createState() => _TodoAppState();
+}
+
+class _TodoAppState extends State<TodoApp> {
+  final TextEditingController _controller = TextEditingController();
+  List<Todo> _todos = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTodos();
+  }
+
+  Future<void> _refreshTodos() async {
+    setState(() => _isLoading = true);
+    final data = await DatabaseHelper.instance.readAllTodos();
+    setState(() {
+      _todos = data;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _addTodo() async {
+    if (_controller.text.isEmpty) return;
+
+    final newTodo = Todo(title: _controller.text);
+    await DatabaseHelper.instance.createTodo(newTodo);
+    _controller.clear();
+    _refreshTodos();
+  }
+
+
+  Future<void> _deleteTodo(int id) async {
+    await DatabaseHelper.instance.deleteTodo(id);
+    _refreshTodos();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('SQLite Todo List'),
+        backgroundColor: Colors.blueGrey[50],
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Введите дело...',
+                      border: UnderlineInputBorder(),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: _addTodo,
+                ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+              itemCount: _todos.length,
+              itemBuilder: (context, index) {
+                final todo = _todos[index];
+                return ListTile(
+                  title: Text(todo.title),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: () => _deleteTodo(todo.id!),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
