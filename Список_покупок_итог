@@ -1,0 +1,143 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const ShoppingListApp());
+}
+
+class ShoppingListApp extends StatelessWidget {
+  const ShoppingListApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Список покупок',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: const ShoppingListScreen(),
+    );
+  }
+}
+
+class ShoppingListScreen extends StatefulWidget {
+  const ShoppingListScreen({super.key});
+
+  @override
+  State<ShoppingListScreen> createState() => _ShoppingListScreenState();
+}
+
+class _ShoppingListScreenState extends State<ShoppingListScreen> {
+  // Список для хранения названий покупок
+  final List<String> _shoppingItems = [];
+
+  // Контроллер для управления текстом в TextField
+  final TextEditingController _textController = TextEditingController();
+
+  // Переменная для хранения ошибки валидации
+  String? _errorText;
+
+  // Функция добавления покупки
+  void _addItem() {
+    setState(() {
+      if (_textController.text.trim().isEmpty) {
+        _errorText = 'Поле не должно быть пустым';
+      } else {
+        // Добавляем текст в начало списка
+        _shoppingItems.insert(0, _textController.text.trim());
+        // Очищаем поле после добавления
+        _textController.clear();
+        _errorText = null;
+      }
+    });
+  }
+
+  // Функция удаления конкретной покупки
+  void _removeItem(int index) {
+    setState(() {
+      _shoppingItems.removeAt(index);
+    });
+  }
+
+  // Функция очистки всего списка
+  void _clearAllItems() {
+    setState(() {
+      _shoppingItems.clear();
+    });
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // 1. AppBar с заголовком
+      appBar: AppBar(
+        title: const Text('Мои покупки'),
+        centerTitle: true,
+        actions: [
+          // 3. Кнопка очистки всего списка
+          if (_shoppingItems.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep),
+              onPressed: _clearAllItems,
+              tooltip: 'Очистить всё',
+            ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // 4. Форма ввода данных
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _textController,
+              decoration: InputDecoration(
+                labelText: 'Что купить?',
+                errorText: _errorText, // Валидация
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () => _textController.clear(),
+                ),
+              ),
+              onSubmitted: (_) => _addItem(), // Добавление по нажатию Enter
+            ),
+          ),
+
+          // 1. ListView для отображения списка
+          Expanded(
+            child: _shoppingItems.isEmpty
+                ? const Center(child: Text('Список пока пуст'))
+                : ListView.builder(
+              itemCount: _shoppingItems.length,
+              itemBuilder: (context, index) {
+                // 1. Card и ListTile для каждой покупки
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: ListTile(
+                    title: Text(_shoppingItems[index]),
+                    // 3. IconButton для удаления
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      onPressed: () => _removeItem(index),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      // 1 & 3. FloatingActionButton - добавление покупки
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addItem,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
