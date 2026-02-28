@@ -1,0 +1,208 @@
+1.
+import 'dart:async';
+
+Future<String> loadUserData() async {
+  await Future.delayed(Duration(seconds: 2));
+  return 'Дмитрий';
+}
+
+void main() async {
+  try {
+    final username = await loadUserData();
+    print('Привет, $username!');
+  } catch (e) {
+    print('Ошибка при загрузке имени пользователя: $e');
+  }
+}
+
+2.
+import 'dart:async';
+import 'dart:math';
+
+Future<String> getWeather() async {
+  if (Random().nextDouble() > 2.0) {
+    throw Exception('Не удалось получить данные о погоде.');
+  }
+  await Future.delayed(Duration(seconds: 1));
+  return 'Солнечно, 25°C';
+}
+
+void main() async {
+  try {
+    final weather = await getWeather();
+    print('Погода: $weather');
+  } catch (error) {
+    print('Произошла ошибка: $error');
+  }
+}
+
+3.
+
+import 'dart:async';
+
+Future<void> simpleTimer() async {
+  for (int i = 1; i <= 5; i++) {
+    await Future.delayed(Duration(seconds:1));
+    print(i);
+  }
+}
+
+void main() async {
+  await simpleTimer();
+}
+
+4.
+import 'dart:async';
+import 'dart:math';
+
+Future<String> fetchUserData() async {
+  await Future.delayed(Duration(seconds: 1));
+  if (Random().nextDouble() > 0.5) {
+    throw Exception('Ошибка загрузки данных');
+  }
+  return 'Дмитрий';
+}
+
+void main() async {
+  try {
+    final name = await fetchUserData();
+    print('Данные пользователя: $name');
+  } catch (e) {
+    print('Ошибка: $e');
+  }
+}
+
+5.
+import 'dart:async';
+
+Future<String> fetchUserOrder() async {
+  await Future.delayed(Duration(seconds: 1));
+  return 'Кофе';
+}
+
+Future<String> processOrder(String order) async {
+  await Future.delayed(Duration(seconds: 1));
+  if (order.isEmpty) {
+    throw Exception('Заказ пустой!');
+  }
+  return 'Заказ "$order" обработан.';
+}
+
+void main() async {
+  try {
+    final order = await fetchUserOrder();
+    final result = await processOrder(order);
+    print(result);
+  } catch (e) {
+    print('Ошибка: $e');
+  }
+}
+
+6.
+import 'dart:async';
+import 'dart:math';
+
+// Задача 1: Простая асинхронная загрузка данных
+Future<String> loadUserData() async {
+  await Future.delayed(Duration(seconds: 2));
+  return 'Иван';
+}
+
+Future<void> greetUser() async {
+  try {
+    final username = await loadUserData();
+    print('Привет, $username!');
+  } catch (e) {
+    print('Ошибка при загрузке имени пользователя: $e');
+  }
+}
+
+// Задача 2: Обработка ошибки в асинхронной функции
+Future<String> getWeather() async {
+  // Имитируем возможную ошибку
+  if (Random().nextDouble() > 0.7) {
+    throw Exception('Не удалось получить данные о погоде.');
+  }
+  await Future.delayed(Duration(seconds: 1));
+  return 'Солнечно, 25°C';
+}
+
+Future<void> displayWeather() async {
+  try {
+    final weather = await getWeather();
+    print('Погода: $weather');
+  } catch (error) {
+    print('Произошла ошибка: $error');
+  }
+}
+
+// Задача 3: Простой таймер с асинхронностью
+Future<void> simpleTimer() async {
+  for (int i = 1; i <= 5; i++) {
+    await Future.delayed(Duration(seconds: 1));
+    print(i);
+  }
+}
+
+// Задача 4: Базовая асинхронность с обработкой ошибок
+Future<String> fetchUserData() async {
+  await Future.delayed(Duration(seconds: 1));
+  if (Random().nextDouble() > 0.5) {
+    throw Exception('Ошибка загрузки данных');
+  }
+  return 'Алексей';
+}
+
+Future<void> displayUserData() async {
+  try {
+    final name = await fetchUserData();
+    print('Данные пользователя: $name');
+  } catch (e) {
+    print('Ошибка: $e');
+  }
+}
+
+// Задача 5: Цепочка асинхронных вызовов
+Future<String> fetchUserOrder() async {
+  await Future.delayed(Duration(seconds: 1));
+  return 'Кофе';
+}
+
+Future<String> processOrder(String order) async {
+  await Future.delayed(Duration(seconds: 1));
+  if (order.isEmpty) {
+    throw Exception('Заказ пустой!');
+  }
+  return 'Заказ "$order" обработан.';
+}
+
+Future<void> handleOrder() async {
+  try {
+    final order = await fetchUserOrder();
+    final result = await processOrder(order);
+    print(result);
+  } catch (e) {
+    print('Ошибка: $e');
+  }
+}
+
+// Главная функция для запуска задач
+void main() async {
+  print('Задача 1:');
+  await greetUser();
+
+  print('\nЗадача 2:');
+  await displayWeather();
+
+  print('\nЗадача 3:');
+  await simpleTimer();
+
+  print('\nЗадача 4:');
+  await displayUserData();
+
+  print('\nЗадача 5:');
+  await handleOrder();
+}
+
+
+
