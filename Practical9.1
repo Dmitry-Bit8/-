@@ -1,0 +1,19 @@
+import 'package:flutter/material.dart';
+
+const double textSize = 22;
+void main() {
+  runApp(MaterialApp(
+      home:  Scaffold(
+        body: ListView(
+          padding: const EdgeInsets.all(8),
+          children:[
+            Text("Tom", style: TextStyle(fontSize: textSize)),
+            Text("Alice", style: TextStyle(fontSize: textSize)),
+            Text("Bob", style: TextStyle(fontSize: textSize)),
+            Text("Sam", style: TextStyle(fontSize: textSize)),
+            Text("Kate", style: TextStyle(fontSize: textSize)),
+          ],
+        ),
+        appBar: AppBar(title: Text("METANIT.COM")),)
+  ));
+}
