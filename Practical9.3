@@ -1,0 +1,36 @@
+import 'package:flutter/material.dart';
+
+const double textSize = 22;
+const double space = 15;
+void main() {
+  runApp(MaterialApp(
+      home:  Scaffold(
+        body: ListView(
+          padding: const EdgeInsets.all(8),
+          scrollDirection: Axis.horizontal,
+          children:[
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: space),
+              child: Text("Tom", style: TextStyle(fontSize: textSize)),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: space),
+              child: Text("Alice", style: TextStyle(fontSize: textSize)),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: space),
+              child: Text("Bob", style: TextStyle(fontSize: textSize)),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: space),
+              child: Text("Sam", style: TextStyle(fontSize: textSize)),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: space),
+              child: Text("Kate", style: TextStyle(fontSize: textSize)),
+            ),
+          ],
+        ),
+        appBar: AppBar(title: Text("METANIT.COM")),)
+  ));
+}
