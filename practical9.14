@@ -1,0 +1,22 @@
+import 'package:flutter/material.dart';
+
+final List<String> users = ["Tom", "Bob", "Sam", "Mike"];
+final List<IconData> icons = [Icons.face, Icons.tag_faces, Icons.work, Icons.book];
+
+void main() {
+  runApp(MaterialApp(
+      home:  Scaffold(
+        body: ListView.separated(
+            padding: const EdgeInsets.all(8),
+            itemCount: users.length,
+            separatorBuilder: (BuildContext context, int index) => Divider(),
+            itemBuilder: (BuildContext context, int index) {
+              return ListTile(
+                title: Text(users[index], style:TextStyle(fontSize: 22)),
+                leading: Icon(icons[index]),
+              );
+            }
+        ),
+        appBar: AppBar(title: Text("METANIT.COM")),)
+  ));
+}
