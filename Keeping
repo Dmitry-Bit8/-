@@ -1,0 +1,191 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() async {
+
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Settings App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const SettingsScreen(),
+    );
+  }
+}
+
+class SettingsRepository {
+
+  static const String _keyTheme = 'is_dark_theme';
+  static const String _keyUserName = 'user_name';
+  static const String _keyTextSize = 'text_size';
+
+  Future<void> saveThemeMode(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyTheme, isDark);
+  }
+
+  Future<bool> loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyTheme) ?? false;
+  }
+
+  Future<void> saveUserName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserName, name);
+  }
+
+  Future<String> loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserName) ?? '';
+  }
+
+  Future<void> saveTextSize(double size) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_keyTextSize, size);
+  }
+
+  Future<double> loadTextSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_keyTextSize) ?? 16.0;
+  }
+}
+
+
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final SettingsRepository _repository = SettingsRepository();
+  final TextEditingController _nameController = TextEditingController();
+
+  bool _isDarkTheme = false;
+  double _textSize = 16.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final isDark = await _repository.loadThemeMode();
+    final name = await _repository.loadUserName();
+    final size = await _repository.loadTextSize();
+
+    setState(() {
+      _isDarkTheme = isDark;
+      _nameController.text = name;
+      _textSize = size;
+    });
+  }
+
+  Future<void> _saveAllSettings() async {
+    await _repository.saveThemeMode(_isDarkTheme);
+    await _repository.saveUserName(_nameController.text);
+    await _repository.saveTextSize(_textSize);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Настройки сохранены!')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _isDarkTheme ? Colors.grey[900] : Colors.white,
+      appBar: AppBar(
+        title: const Text('Настройки приложения'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            SwitchListTile(
+              title: Text(
+                'Темная тема',
+                style: TextStyle(
+                  fontSize: _textSize,
+                  color: _isDarkTheme ? Colors.white : Colors.black,
+                ),
+              ),
+              value: _isDarkTheme,
+              onChanged: (bool value) {
+                setState(() {
+                  _isDarkTheme = value;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Имя пользователя',
+                labelStyle: TextStyle(color: _isDarkTheme ? Colors.white70 : Colors.black54),
+                border: const OutlineInputBorder(),
+              ),
+              style: TextStyle(
+                fontSize: _textSize,
+                color: _isDarkTheme ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            Text(
+              'Размер текста: ${_textSize.toInt()}',
+              style: TextStyle(
+                fontSize: _textSize,
+                color: _isDarkTheme ? Colors.white : Colors.black,
+              ),
+            ),
+
+            Slider(
+              value: _textSize,
+              min: 12.0,
+              max: 30.0,
+              divisions: 18,
+              label: _textSize.round().toString(),
+              onChanged: (double value) {
+                setState(() {
+                  _textSize = value;
+                });
+              },
+            ),
+            const SizedBox(height: 40),
+
+            Center(
+              child: ElevatedButton(
+                onPressed: _saveAllSettings,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                ),
+                child: const Text('Сохранить'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+}
