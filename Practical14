@@ -1,0 +1,168 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Настройки приложения',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: SettingsScreen(),
+    );
+  }
+}
+
+// 2. Класс для работы с локальным хранилищем (SharedPreferences)
+class SettingsRepository {
+  static const String _keyTheme = 'is_dark_theme';
+  static const String _keyName = 'user_name';
+  static const String _keyFontSize = 'font_size';
+
+  // Сохранение темы
+  Future<void> saveThemeMode(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyTheme, isDark);
+  }
+
+  // Загрузка темы
+  Future<bool> loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyTheme) ?? false;
+  }
+
+  // Сохранение имени пользователя
+  Future<void> saveUserName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyName, name);
+  }
+
+  // Загрузка имени
+  Future<String> loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyName) ?? '';
+  }
+
+  // Сохранение размера шрифта
+  Future<void> saveTextSize(double size) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_keyFontSize, size);
+  }
+
+  // Загрузка размера шрифта
+  Future<double> loadTextSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_keyFontSize) ?? 16.0;
+  }
+}
+
+// 1. Экран настроек
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _SettingsScreenState createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final SettingsRepository _repository = SettingsRepository();
+  final TextEditingController _nameController = TextEditingController();
+
+  bool _isDark = false;
+  double _fontSize = 16.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings(); // 3. Загружаем сохраненные данные при инициализации
+  }
+
+  // Загрузка данных из репозитория и обновление состояния экрана
+  Future<void> _loadSettings() async {
+    final theme = await _repository.loadThemeMode();
+    final name = await _repository.loadUserName();
+    final size = await _repository.loadTextSize();
+
+    if (mounted) {
+      setState(() {
+        _isDark = theme;
+        _nameController.text = name;
+        _fontSize = size;
+      });
+    }
+  }
+
+  // Сохранение текущих значений из UI в память устройства
+  Future<void> _saveSettings() async {
+    await _repository.saveThemeMode(_isDark);
+    await _repository.saveUserName(_nameController.text);
+    await _repository.saveTextSize(_fontSize);
+
+    // Уведомление пользователя об успешном сохранении
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Настройки сохранены!')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose(); // Очистка контроллера для предотвращения утечек памяти
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Настройки')),
+      body: SingleChildScrollView( // Добавлено для корректного отображения на маленьких экранах
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Переключатель темы
+            SwitchListTile(
+              title: const Text('Темная тема'),
+              value: _isDark,
+              onChanged: (val) => setState(() => _isDark = val),
+            ),
+            // Поле ввода имени
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Имя пользователя',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 30),
+            // Отображение текущего размера шрифта
+            Text(
+              'Размер текста: ${_fontSize.toInt()}',
+              style: TextStyle(fontSize: _fontSize),
+            ),
+            // Слайдер для изменения размера шрифта
+            Slider(
+              min: 12.0,
+              max: 30.0,
+              value: _fontSize,
+              onChanged: (val) => setState(() => _fontSize = val),
+            ),
+            const SizedBox(height: 20),
+            // Кнопка сохранения
+            ElevatedButton(
+              onPressed: _saveSettings,
+              style: ElevatedButton.styleFrom(minimumSize: const Size(200, 50)),
+              child: const Text('Сохранить'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
