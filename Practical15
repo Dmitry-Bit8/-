@@ -1,0 +1,231 @@
+import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SQLite Todo App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const TodoListScreen(),
+    );
+  }
+}
+
+// --- Модель данных ---
+class Todo {
+  final int? id;
+  final String title;
+  final bool isDone;
+
+  Todo({this.id, required this.title, this.isDone = false});
+
+  // Преобразование в Map для записи в базу (SQLite не поддерживает bool, используем 1 и 0)
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'isDone': isDone ? 1 : 0,
+    };
+  }
+
+  // Создание объекта Todo из Map, полученного из базы
+  factory Todo.fromMap(Map<String, dynamic> map) {
+    return Todo(
+      id: map['id'],
+      title: map['title'],
+      isDone: map['isDone'] == 1,
+    );
+  }
+}
+
+// --- Класс для управления базой данных (Singleton) ---
+class DatabaseHelper {
+  static final DatabaseHelper instance = DatabaseHelper._init();
+  static Database? _database;
+
+  DatabaseHelper._init();
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB('todo_database.db');
+    return _database!;
+  }
+
+  Future<Database> _initDB(String filePath) async {
+    // Получаем путь к системной папке для баз данных
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
+  }
+
+  Future _createDB(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE todos(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        isDone INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  // Метод вставки данных
+  Future<void> insertTodo(Todo todo) async {
+    final db = await instance.database;
+    await db.insert(
+      'todos',
+      todo.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Получение всех записей
+  Future<List<Todo>> getTodos() async {
+    final db = await instance.database;
+    final List<Map<String, dynamic>> maps = await db.query('todos', orderBy: 'id DESC');
+    return maps.map((map) => Todo.fromMap(map)).toList();
+  }
+
+  // Обновление записи (например, смена статуса готовности)
+  Future<void> updateTodo(Todo todo) async {
+    final db = await instance.database;
+    await db.update(
+      'todos',
+      todo.toMap(),
+      where: 'id = ?',
+      whereArgs: [todo.id],
+    );
+  }
+
+  // Удаление записи
+  Future<void> deleteTodo(int id) async {
+    final db = await instance.database;
+    await db.delete(
+      'todos',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+}
+
+// --- Интерфейс приложения ---
+class TodoListScreen extends StatefulWidget {
+  const TodoListScreen({super.key});
+
+  @override
+  State<TodoListScreen> createState() => _TodoListScreenState();
+}
+
+class _TodoListScreenState extends State<TodoListScreen> {
+  final TextEditingController _controller = TextEditingController();
+  List<Todo> _todos = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTodos();
+  }
+
+  // Загрузка/обновление списка дел из БД
+  Future<void> _refreshTodos() async {
+    setState(() => _isLoading = true);
+    final data = await DatabaseHelper.instance.getTodos();
+    setState(() {
+      _todos = data;
+      _isLoading = false;
+    });
+  }
+
+  // Добавление новой задачи
+  void _addTodo() async {
+    if (_controller.text.isEmpty) return;
+    await DatabaseHelper.instance.insertTodo(Todo(title: _controller.text));
+    _controller.clear();
+    _refreshTodos();
+  }
+
+  // Изменение статуса (выполнено/не выполнено)
+  void _toggleTodo(Todo todo) async {
+    final updatedTodo = Todo(
+      id: todo.id,
+      title: todo.title,
+      isDone: !todo.isDone,
+    );
+    await DatabaseHelper.instance.updateTodo(updatedTodo);
+    _refreshTodos();
+  }
+
+  // Удаление задачи
+  void _deleteTodo(int id) async {
+    await DatabaseHelper.instance.deleteTodo(id);
+    _refreshTodos();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('SQLite Todo List')),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(labelText: 'Добавить задачу'),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: _addTodo,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+              itemCount: _todos.length,
+              itemBuilder: (context, index) {
+                final todo = _todos[index];
+                return ListTile(
+                  leading: Checkbox(
+                    value: todo.isDone,
+                    onChanged: (_) => _toggleTodo(todo),
+                  ),
+                  title: Text(
+                    todo.title,
+                    style: TextStyle(
+                      decoration: todo.isDone ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: () => _deleteTodo(todo.id!),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
