@@ -1,0 +1,47 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MaterialApp(
+      home:  Scaffold(
+        body: UsersList(),
+        appBar: AppBar(title: Text("METANIT.COM")),)
+  ));
+}
+
+class UsersList extends StatefulWidget {
+  const UsersList({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _UsersListState createState() => _UsersListState();
+}
+class _UsersListState extends State<UsersList> {
+  final List<String> _users = ["Tom", "Alice", "Sam", "Bob", "Kate"];
+  int _selectedIndex = -1;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+              _selectedIndex==-1?"Не выбрано": "Выбрано: ${_users[_selectedIndex]}",
+              style: TextStyle(fontSize: 40)),
+          Expanded(child: ListView.builder(
+            itemCount: _users.length,
+            itemBuilder: (BuildContext context, int index) =>
+                ListTile(
+                  onTap: () {
+                    setState(() {
+                      // устанавливаем индекс выделенного элемента
+                      _selectedIndex = index;
+                    });
+                  },
+                  title: Text(_users[index], style: TextStyle(fontSize: 34)),
+                  selected: index == _selectedIndex,
+                  selectedTileColor: Colors.black12,
+                ),
+          ))
+        ]);
+  }
+}
