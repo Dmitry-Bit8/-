@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: Text('Карточка товара')),
+        body: Center(
+          child: ProductCard(),
+        ),
+      ),
+    );
+  }
+}
+
+class ProductCard extends StatelessWidget {
+  const ProductCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all()),
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Смартфон Xiaomi Redmi Note 14',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8.0),
+          Image.network(
+            'https://avatars.mds.yandex.net/get-mpic/15311448/2a000001989ff834a4a64348fbe1bb134105/orig', // Замените на реальный URL!
+            width: 200,
+            height: 200,
+            fit: BoxFit.cover,
+          ),
+          SizedBox(height: 8.0),
+          Container(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Описание:  Новейший смартфон Xiaomi Redmi Note 14 с передовыми функциями и потрясающей камерой.  Идеальное сочетание цены и качества.',
+            ),
+          ),
+          SizedBox(height: 8.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Цена: 19 990 руб.'),
+              Text('Рейтинг: 4.8 ⭐'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
