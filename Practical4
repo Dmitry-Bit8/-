@@ -1,0 +1,257 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class User {
+  final int id;
+  final String username;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String password;
+  final String phone;
+  final int userStatus;
+
+  User({
+    required this.id,
+    required this.username,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.password,
+    required this.phone,
+    required this.userStatus,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'password': password,
+      'phone': phone,
+      'userStatus': userStatus,
+    };
+  }
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as int? ?? 0,
+      username: json['username'] as String? ?? '',
+      firstName: json['firstName'] as String? ?? '',
+      lastName: json['lastName'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      password: json['password'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      userStatus: json['userStatus'] as int? ?? 0,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'ID: $id\nUsername: $username\nEmail: $email\nPhone: $phone';
+  }
+}
+
+class ApiService {
+  final String baseUrl = "https://petstore.swagger.io/v2";
+
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  Future<User?> getUser(String username) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/$username'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        return User.fromJson(jsonDecode(response.body));
+      } else {
+        debugPrint("Ошибка при получении: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Исключение при GET: $e");
+      return null;
+    }
+  }
+
+  Future<bool> createUser(User user) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/user'),
+        headers: _headers,
+        body: jsonEncode(user.toJson()),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Исключение при POST: $e");
+      return false;
+    }
+  }
+
+  Future<bool> deleteUser(String username) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/user/$username'),
+        headers: _headers,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Исключение при DELETE: $e");
+      return false;
+    }
+  }
+}
+
+void main() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: PetStorePage(),
+  ));
+}
+
+class PetStorePage extends StatefulWidget {
+  const PetStorePage({super.key});
+
+  @override
+  State<PetStorePage> createState() => _PetStorePageState();
+}
+
+class _PetStorePageState extends State<PetStorePage> {
+  final ApiService api = ApiService();
+  final TextEditingController _controller = TextEditingController();
+
+  String _result = "Введите имя пользователя и выберите действие";
+  bool _isLoading = false;
+
+  void _updateUI(String text) {
+    setState(() {
+      _result = text;
+      _isLoading = false;
+    });
+  }
+
+  void _handleGet() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    final user = await api.getUser(name);
+
+    if (user != null) {
+      _updateUI("Пользователь найден:\n\n$user");
+    } else {
+      _updateUI("Пользователь не найден или произошла ошибка.");
+    }
+  }
+
+  void _handleCreate() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    final newUser = User(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      username: name,
+      firstName: "Иван",
+      lastName: "Иванов",
+      email: "$name@example.com",
+      password: "password123",
+      phone: "+79990000000",
+      userStatus: 1,
+    );
+
+    final success = await api.createUser(newUser);
+    _updateUI(success ? "Успех: Пользователь '$name' создан!" : "Ошибка при создании пользователя.");
+  }
+
+  void _handleDelete() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    final success = await api.deleteUser(name);
+    _updateUI(success ? "Успех: Пользователь '$name' удален." : "Ошибка при удалении (возможно, юзер не существует).");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('PetStore API Client'),
+        backgroundColor: Colors.blueGrey.shade50,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                labelText: 'Username (например: user1)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            if (_isLoading)
+              const CircularProgressIndicator()
+            else
+              Wrap(
+                spacing: 12,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _handleGet,
+                    child: const Text('Найти (GET)'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _handleCreate,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade50),
+                    child: const Text('Создать (POST)'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _handleDelete,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade50),
+                    child: const Text('Удалить (DELETE)'),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 30),
+            const Divider(),
+
+            // Блок вывода результата
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(
+                    _result,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
