@@ -1,0 +1,235 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+
+// --- 1. DOMAIN LAYER (Модель данных) ---
+class Note {
+  final String id;
+  final String title;
+  final String content;
+  final DateTime createdAt;
+
+  Note({
+    required this.id,
+    required this.title,
+    required this.content,
+    required this.createdAt,
+  });
+
+  // Преобразование в JSON для локального хранения
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'content': content,
+    'createdAt': createdAt.toIso8601String(),
+  };
+
+  factory Note.fromJson(Map<String, dynamic> json) => Note(
+    id: json['id'],
+    title: json['title'],
+    content: json['content'],
+    createdAt: DateTime.parse(json['createdAt']),
+  );
+}
+
+// --- 2. DATA LAYER (Работа с данными) ---
+class NoteService {
+  static const String _key = 'notes_data';
+
+  Future<void> saveNotes(List<Note> notes) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String encodedData = jsonEncode(notes.map((n) => n.toJson()).toList());
+    await prefs.setString(_key, encodedData);
+  }
+
+  Future<List<Note>> loadNotes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? data = prefs.getString(_key);
+    if (data == null) return [];
+
+    final List decoded = jsonDecode(data);
+    return decoded.map((item) => Note.fromJson(item)).toList();
+  }
+}
+
+// --- 3. LOGIC LAYER (Управление состоянием - Provider) ---
+class NoteProvider extends ChangeNotifier {
+  final NoteService _service = NoteService();
+  List<Note> _notes = [];
+  bool _isLoading = false;
+
+  List<Note> get notes => _notes;
+  bool get isLoading => _isLoading;
+
+  // Загрузка данных с обработкой состояния
+  Future<void> fetchNotes() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _notes = await _service.loadNotes();
+      _notes.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Сортировка: новые сверху
+    } catch (e) {
+      debugPrint("Error loading notes: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> addNote(String title, String content) async {
+    final newNote = Note(
+      id: DateTime.now().toString(),
+      title: title,
+      content: content,
+      createdAt: DateTime.now(),
+    );
+    _notes.insert(0, newNote);
+    await _service.saveNotes(_notes);
+    notifyListeners();
+  }
+
+  Future<void> deleteNote(String id) async {
+    _notes.removeWhere((note) => note.id == id);
+    await _service.saveNotes(_notes);
+    notifyListeners();
+  }
+}
+
+// --- 4. PRESENTATION LAYER (Интерфейс) ---
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => NoteProvider()..fetchNotes(),
+      child: const QuickMemoApp(),
+    ),
+  );
+}
+
+class QuickMemoApp extends StatelessWidget {
+  const QuickMemoApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'QuickMemo',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: const NotesScreen(),
+    );
+  }
+}
+
+class NotesScreen extends StatelessWidget {
+  const NotesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<NoteProvider>();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Мои Заметки'),
+        centerTitle: true,
+        elevation: 2,
+      ),
+      body: provider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : provider.notes.isEmpty
+          ? const Center(child: Text('Заметок пока нет. Нажмите +'))
+          : ListView.builder(
+        padding: const EdgeInsets.all(8),
+        itemCount: provider.notes.length,
+        itemBuilder: (context, index) {
+          final note = provider.notes[index];
+          return NoteCard(note: note); // Вынесено в отдельный виджет для чистоты
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddNoteDialog(context),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showAddNoteDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16, right: 16, top: 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Заголовок', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: contentController,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'Текст', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                if (titleController.text.isNotEmpty) {
+                  context.read<NoteProvider>().addNote(
+                    titleController.text,
+                    contentController.text,
+                  );
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NoteCard extends StatelessWidget {
+  final Note note;
+  const NoteCard({super.key, required this.note});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: Key(note.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: Colors.red,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      onDismissed: (_) {
+        context.read<NoteProvider>().deleteNote(note.id);
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        child: ListTile(
+          title: Text(note.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(note.content, maxLines: 2, overflow: TextOverflow.ellipsis),
+          trailing: Text(
+            "${note.createdAt.day}.${note.createdAt.month}",
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ),
+      ),
+    );
+  }
+}
