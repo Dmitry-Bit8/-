@@ -1,0 +1,16 @@
+import 'package:flutter/material.dart';
+
+const List<String> users = <String>["Tom", "Alice", "Bob", "Sam", "Kate"];
+void main() {
+  runApp(MaterialApp(
+      home:  Scaffold(
+        body: ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: users.length,
+            itemBuilder: (BuildContext context, int index) {
+              return Text(users[index], style: TextStyle(fontSize: 22));
+            }
+        ),
+        appBar: AppBar(title: Text("METANIT.COM")),)
+  ));
+}
