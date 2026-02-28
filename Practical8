@@ -1,0 +1,110 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const CounterApp());
+}
+class CounterApp extends StatefulWidget {
+  const CounterApp({super.key});
+
+  @override
+  State<CounterApp> createState() => _CounterAppState();
+}
+
+class _CounterAppState extends State<CounterApp> {
+  int _counter = 0;
+  int? _previousValue;
+
+  final int _maxLimit = 10;
+  final int _minLimit = -10;
+  void _updateCounter(int newValue) {
+    if (newValue >= _minLimit && newValue <= _maxLimit) {
+      setState(() {
+        _previousValue = _counter;
+        _counter = newValue;
+      });
+    }
+  }
+  Color _getCounterColor() {
+    if (_counter > 0) return Colors.green;
+    if (_counter < 0) return Colors.red;
+    return Colors.blue;
+  }
+
+  String _getStatusMessage() {
+    if (_counter == _maxLimit) return "Достигнут максимум!";
+    if (_counter == _minLimit) return "Достигнут минимум!";
+    if (_counter == 0) return "Начните отсчет";
+    return "Продолжайте...";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Счетчик с настройками'),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+
+              Text(
+                _previousValue == null
+                    ? 'История пуста'
+                    : 'Предыдущее значение: $_previousValue',
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              const SizedBox(height: 10),
+
+              Text(
+                '$_counter',
+                style: TextStyle(
+                  fontSize: 80,
+                  fontWeight: FontWeight.bold,
+                  color: _getCounterColor(),
+                ),
+              ),
+
+              Text(
+                _getStatusMessage(),
+                style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+              ),
+
+              const SizedBox(height: 40),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+
+                  ElevatedButton(
+                    onPressed: () => _updateCounter(_counter - 1),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade100),
+                    child: const Text('-1'),
+                  ),
+                  const SizedBox(width: 10),
+
+
+                  ElevatedButton(
+                    onPressed: () => _updateCounter(0),
+                    child: const Text('Сброс'),
+                  ),
+                  const SizedBox(width: 10),
+
+
+                  ElevatedButton(
+                    onPressed: () => _updateCounter(_counter + 1),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade100),
+                    child: const Text('+1'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
