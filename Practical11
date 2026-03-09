@@ -26,25 +26,25 @@ class RegistrationForm extends StatefulWidget {
 }
 
 class _RegistrationFormState extends State<RegistrationForm> {
-  // Ключ для идентификации формы и управления ее валидацией
+
   final _formKey = GlobalKey<FormState>();
 
-  // Контроллеры позволяют получать значения из полей напрямую
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
 
   @override
   void dispose() {
-    // Важно освобождать ресурсы контроллеров, когда виджет уничтожается
+  
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
   void _submitForm() {
-    // Проверка метода validate() запускает все validator'ы внутри TextFormField
+  
     if (_formKey.currentState!.validate()) {
-      // Если форма валидна, выводим данные
+     
       final name = _nameController.text;
       final email = _emailController.text;
 
@@ -62,7 +62,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
         key: _formKey, // Привязываем ключ к форме
         child: Column(
           children: [
-            // Поле для ввода имени
+           
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
@@ -70,7 +70,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 prefixIcon: Icon(Icons.person),
                 border: OutlineInputBorder(),
               ),
-              // Общая логика валидации
+            
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Пожалуйста, введите имя';
@@ -79,7 +79,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
               },
             ),
             const SizedBox(height: 16),
-            // Поле для ввода Email
+            
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
@@ -92,7 +92,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 if (value == null || value.isEmpty) {
                   return 'Введите email';
                 }
-                // Простая проверка email регулярным выражением
+              
                 if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                   return 'Введите корректный email адрес';
                 }
