@@ -12,7 +12,7 @@ class UsersList extends StatefulWidget {
   const UsersList({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
+ 
   _UsersListState createState() => _UsersListState();
 }
 class _UsersListState extends State<UsersList> {
@@ -33,7 +33,7 @@ class _UsersListState extends State<UsersList> {
                 ListTile(
                   onTap: () {
                     setState(() {
-                      // устанавливаем индекс выделенного элемента
+            
                       _selectedIndex = index;
                     });
                   },
