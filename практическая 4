@@ -102,7 +102,7 @@ void main() async {
 import 'dart:async';
 import 'dart:math';
 
-// Задача 1: Простая асинхронная загрузка данных
+Задача 1: Простая асинхронная загрузка данных
 Future<String> loadUserData() async {
   await Future.delayed(Duration(seconds: 2));
   return 'Иван';
@@ -116,8 +116,7 @@ Future<void> greetUser() async {
     print('Ошибка при загрузке имени пользователя: $e');
   }
 }
-
-// Задача 2: Обработка ошибки в асинхронной функции
+Задача 2: Обработка ошибки в асинхронной функции
 Future<String> getWeather() async {
   // Имитируем возможную ошибку
   if (Random().nextDouble() > 0.7) {
@@ -136,7 +135,7 @@ Future<void> displayWeather() async {
   }
 }
 
-// Задача 3: Простой таймер с асинхронностью
+Задача 3: Простой таймер с асинхронностью
 Future<void> simpleTimer() async {
   for (int i = 1; i <= 5; i++) {
     await Future.delayed(Duration(seconds: 1));
@@ -144,7 +143,7 @@ Future<void> simpleTimer() async {
   }
 }
 
-// Задача 4: Базовая асинхронность с обработкой ошибок
+Задача 4: Базовая асинхронность с обработкой ошибок
 Future<String> fetchUserData() async {
   await Future.delayed(Duration(seconds: 1));
   if (Random().nextDouble() > 0.5) {
@@ -162,7 +161,7 @@ Future<void> displayUserData() async {
   }
 }
 
-// Задача 5: Цепочка асинхронных вызовов
+Задача 5: Цепочка асинхронных вызовов
 Future<String> fetchUserOrder() async {
   await Future.delayed(Duration(seconds: 1));
   return 'Кофе';
@@ -186,7 +185,7 @@ Future<void> handleOrder() async {
   }
 }
 
-// Главная функция для запуска задач
+Главная функция для запуска задач
 void main() async {
   print('Задача 1:');
   await greetUser();
