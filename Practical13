@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Модель данных Todo
+
 class Todo {
   final int? id;
   final String title;
@@ -29,7 +29,7 @@ class Todo {
 
   Todo({this.id, required this.title, this.isDone = false});
 
-  // Преобразование в Map для записи в базу
+ 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -38,7 +38,7 @@ class Todo {
     };
   }
 
-  // Создание объекта из Map (чтение из базы)
+  
   factory Todo.fromMap(Map<String, dynamic> map) {
     return Todo(
       id: map['id'],
@@ -48,7 +48,7 @@ class Todo {
   }
 }
 
-// Помощник для работы с базой данных
+
 class DatabaseHelper {
   static Database? _database;
 
@@ -91,13 +91,10 @@ class DatabaseHelper {
 class TodoListScreen extends StatefulWidget {
   const TodoListScreen({super.key});
 
-  // Изменено: Используем TodoListScreenState без подчеркивания,
-  // чтобы избежать ошибки "Invalid use of a private type in a public API"
   @override
   TodoListScreenState createState() => TodoListScreenState();
 }
 
-// Убрали '_' перед названием класса, сделав его публичным
 class TodoListScreenState extends State<TodoListScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<Todo> _todos = [];
@@ -108,7 +105,6 @@ class TodoListScreenState extends State<TodoListScreen> {
     _refreshTodos();
   }
 
-  // Метод для получения свежих данных из БД
   void _refreshTodos() async {
     final data = await _dbHelper.getTodos();
     if (!mounted) return; // Проверка, что виджет еще в дереве
@@ -117,7 +113,6 @@ class TodoListScreenState extends State<TodoListScreen> {
     });
   }
 
-  // Метод для добавления тестовой записи
   void _addTodo() async {
     final newTodo = Todo(
       title: 'Задача #${_todos.length + 1} (${DateTime.now().minute}:${DateTime.now().second})',
