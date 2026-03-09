@@ -231,7 +231,7 @@ class _PetStorePageState extends State<PetStorePage> {
             const SizedBox(height: 30),
             const Divider(),
 
-            // Блок вывода результата
+       
             Expanded(
               child: Container(
                 width: double.infinity,
