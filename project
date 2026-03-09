@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
-// --- 1. DOMAIN LAYER (Модель данных) ---
 class Note {
   final String id;
   final String title;
@@ -17,7 +16,6 @@ class Note {
     required this.createdAt,
   });
 
-  // Преобразование в JSON для локального хранения
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
@@ -33,7 +31,6 @@ class Note {
   );
 }
 
-// --- 2. DATA LAYER (Работа с данными) ---
 class NoteService {
   static const String _key = 'notes_data';
 
@@ -53,7 +50,6 @@ class NoteService {
   }
 }
 
-// --- 3. LOGIC LAYER (Управление состоянием - Provider) ---
 class NoteProvider extends ChangeNotifier {
   final NoteService _service = NoteService();
   List<Note> _notes = [];
@@ -62,7 +58,6 @@ class NoteProvider extends ChangeNotifier {
   List<Note> get notes => _notes;
   bool get isLoading => _isLoading;
 
-  // Загрузка данных с обработкой состояния
   Future<void> fetchNotes() async {
     _isLoading = true;
     notifyListeners();
@@ -97,7 +92,6 @@ class NoteProvider extends ChangeNotifier {
   }
 }
 
-// --- 4. PRESENTATION LAYER (Интерфейс) ---
 void main() {
   runApp(
     ChangeNotifierProvider(
