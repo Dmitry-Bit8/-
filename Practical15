@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// --- Модель данных ---
 class Todo {
   final int? id;
   final String title;
@@ -27,7 +26,7 @@ class Todo {
 
   Todo({this.id, required this.title, this.isDone = false});
 
-  // Преобразование в Map для записи в базу (SQLite не поддерживает bool, используем 1 и 0)
+  
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -36,7 +35,7 @@ class Todo {
     };
   }
 
-  // Создание объекта Todo из Map, полученного из базы
+  
   factory Todo.fromMap(Map<String, dynamic> map) {
     return Todo(
       id: map['id'],
@@ -46,7 +45,6 @@ class Todo {
   }
 }
 
-// --- Класс для управления базой данных (Singleton) ---
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -60,7 +58,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    // Получаем путь к системной папке для баз данных
+  
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
@@ -81,7 +79,7 @@ class DatabaseHelper {
     ''');
   }
 
-  // Метод вставки данных
+  
   Future<void> insertTodo(Todo todo) async {
     final db = await instance.database;
     await db.insert(
@@ -91,14 +89,14 @@ class DatabaseHelper {
     );
   }
 
-  // Получение всех записей
+
   Future<List<Todo>> getTodos() async {
     final db = await instance.database;
     final List<Map<String, dynamic>> maps = await db.query('todos', orderBy: 'id DESC');
     return maps.map((map) => Todo.fromMap(map)).toList();
   }
 
-  // Обновление записи (например, смена статуса готовности)
+  
   Future<void> updateTodo(Todo todo) async {
     final db = await instance.database;
     await db.update(
@@ -109,7 +107,7 @@ class DatabaseHelper {
     );
   }
 
-  // Удаление записи
+
   Future<void> deleteTodo(int id) async {
     final db = await instance.database;
     await db.delete(
@@ -120,7 +118,7 @@ class DatabaseHelper {
   }
 }
 
-// --- Интерфейс приложения ---
+
 class TodoListScreen extends StatefulWidget {
   const TodoListScreen({super.key});
 
@@ -139,7 +137,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
     _refreshTodos();
   }
 
-  // Загрузка/обновление списка дел из БД
+  
   Future<void> _refreshTodos() async {
     setState(() => _isLoading = true);
     final data = await DatabaseHelper.instance.getTodos();
@@ -149,7 +147,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
     });
   }
 
-  // Добавление новой задачи
+  
   void _addTodo() async {
     if (_controller.text.isEmpty) return;
     await DatabaseHelper.instance.insertTodo(Todo(title: _controller.text));
@@ -157,7 +155,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
     _refreshTodos();
   }
 
-  // Изменение статуса (выполнено/не выполнено)
+ 
   void _toggleTodo(Todo todo) async {
     final updatedTodo = Todo(
       id: todo.id,
@@ -168,7 +166,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
     _refreshTodos();
   }
 
-  // Удаление задачи
+
   void _deleteTodo(int id) async {
     await DatabaseHelper.instance.deleteTodo(id);
     _refreshTodos();
