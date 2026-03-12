@@ -1,31 +1,27 @@
 import 'dart:math';
 
-// --- Часть 1: Функции высшего порядка + ООП ---
-
 class MathProcessor {
   final List<double> numbers;
 
   MathProcessor(this.numbers);
 
-  /// Метод принимает функцию, которая преобразует каждое число в списке
+
   List<double> process(double Function(double) transformer) {
     return numbers.map((n) => transformer(n)).toList();
   }
 
-  /// Статический метод для генерации случайных чисел в заданном диапазоне
   static List<double> getRandomNumbers(int count, double min, double max) {
     final random = Random();
     return List.generate(count, (_) => min + random.nextDouble() * (max - min));
   }
 }
 
-// --- Часть 2: Абстрактные классы + Наследование (Геометрия) ---
 
 abstract class Shape {
-  /// Абстрактный метод для вычисления площади
+ 
   double area();
 
-  /// Фабричный конструктор для создания объектов на основе JSON
+
   factory Shape.fromJson(Map<String, dynamic> json) {
     final type = json['type'];
     if (type == 'circle') {
@@ -61,31 +57,24 @@ class Rectangle extends Shape {
   String toString() => 'Прямоугольник ${width}x$height, площадь: ${area()}';
 }
 
-// --- Часть 3: Валидатор пароля (Статические методы и константы) ---
 
 class PasswordValidator {
   static const int minLength = 8;
 
-  /// Проверяет пароль на длину и наличие хотя бы одной цифры
   static bool validate(String password) {
     bool hasDigit = password.contains(RegExp(r'\d'));
     return password.length >= minLength && hasDigit;
   }
 }
-
-// --- Часть 4: Банковская система ---
-
 class BankAccount {
   final String accountNumber;
   double _balance;
   String ownerName;
 
-  /// Конструктор с инициализацией базовых полей
   BankAccount(this.ownerName, this.accountNumber, [this._balance = 0.0]);
 
   double get balance => _balance;
 
-  /// Пополнение баланса
   void deposit(double amount) {
     if (amount > 0) {
       _balance += amount;
@@ -93,7 +82,6 @@ class BankAccount {
     }
   }
 
-  /// Снятие средств с проверкой остатка
   bool withdraw(double amount) {
     if (amount > 0 && _balance >= amount) {
       _balance -= amount;
@@ -108,13 +96,11 @@ class BankAccount {
 class Bank {
   List<BankAccount> accounts = [];
 
-  /// Добавление существующего счета в банк
   void addAccount(BankAccount account) {
     accounts.add(account);
     print('Добавлен счет для пользователя: ${account.ownerName}');
   }
 
-  /// Метод перевода между двумя счетами по их номерам
   void transfer(String fromNum, String toNum, double amount) {
     try {
       var fromAcc = accounts.firstWhere((a) => a.accountNumber == fromNum);
@@ -132,11 +118,11 @@ class Bank {
 
 void main() {
   print('--- Часть 1: MathProcessor ---');
-  // Генерируем 3 случайных числа от 1 до 10
+ 
   var nums = MathProcessor.getRandomNumbers(3, 1, 10);
   var processor = MathProcessor(nums);
   print('Исходные числа: $nums');
-  // Возводим в квадрат через функцию высшего порядка
+ 
   var squares = processor.process((n) => n * n);
   print('Квадраты: $squares');
 
@@ -157,7 +143,7 @@ void main() {
   myBank.addAccount(acc1);
   myBank.addAccount(acc2);
 
-  // Выполняем перевод
+ 
   myBank.transfer('AX100', 'BY200', 300.0);
 
   print('Итоговый баланс Дмитрия: ${acc1.balance}');
