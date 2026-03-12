@@ -113,7 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose(); // Очистка контроллера для предотвращения утечек памяти
+    _nameController.dispose(); 
     super.dispose();
   }
 
@@ -121,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
-      body: SingleChildScrollView( // Добавлено для корректного отображения на маленьких экранах
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
