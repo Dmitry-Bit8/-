@@ -64,7 +64,7 @@ class NoteProvider extends ChangeNotifier {
 
     try {
       _notes = await _service.loadNotes();
-      _notes.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Сортировка: новые сверху
+      _notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     } catch (e) {
       debugPrint("Error loading notes: $e");
     } finally {
@@ -139,7 +139,7 @@ class NotesScreen extends StatelessWidget {
         itemCount: provider.notes.length,
         itemBuilder: (context, index) {
           final note = provider.notes[index];
-          return NoteCard(note: note); // Вынесено в отдельный виджет для чистоты
+          return NoteCard(note: note); 
         },
       ),
       floatingActionButton: FloatingActionButton(
