@@ -95,14 +95,14 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               controller: _textController,
               decoration: InputDecoration(
                 labelText: 'Что купить?',
-                errorText: _errorText, // Валидация
+                errorText: _errorText, 
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () => _textController.clear(),
                 ),
               ),
-              onSubmitted: (_) => _addItem(), // Добавление по нажатию Enter
+              onSubmitted: (_) => _addItem(), 
             ),
           ),
 
