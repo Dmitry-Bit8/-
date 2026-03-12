@@ -118,7 +118,7 @@ Future<void> greetUser() async {
 }
 Задача 2: Обработка ошибки в асинхронной функции
 Future<String> getWeather() async {
-  // Имитируем возможную ошибку
+  
   if (Random().nextDouble() > 0.7) {
     throw Exception('Не удалось получить данные о погоде.');
   }
