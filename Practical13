@@ -107,7 +107,7 @@ class TodoListScreenState extends State<TodoListScreen> {
 
   void _refreshTodos() async {
     final data = await _dbHelper.getTodos();
-    if (!mounted) return; // Проверка, что виджет еще в дереве
+    if (!mounted) return; 
     setState(() {
       _todos = data;
     });
