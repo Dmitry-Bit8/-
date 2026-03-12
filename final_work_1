@@ -175,7 +175,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       setState(() => _foundUser = user);
     } catch (e) {
       setState(() => _foundUser = null);
-      // ignore: use_build_context_synchronously
+      
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       setState(() => _isLoading = false);
@@ -186,7 +186,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     if (_foundUser == null) return;
     final success = await _api.deleteUser(_foundUser!.username);
     if (success) {
-      // ignore: use_build_context_synchronously
+      
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Пользователь удален')));
       setState(() => _foundUser = null);
       _searchController.clear();
