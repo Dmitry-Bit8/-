@@ -1,0 +1,157 @@
+import 'dart:math';
+class Phone {
+  String? number;
+  String? model;
+  double? weight;
+  Phone();
+  Phone.withTwo(this.number, this.model, [this.weight]);
+  Phone.full(String number, String model, double weight) : this.withTwo(number, model, weight);
+
+  void receiveCall(String name) {
+    print('Звонит $name');
+  }
+  String? getNumber() {
+    return number;
+  }
+  void sendMessage(List<String> targetNumbers) {
+    print('Сообщение будет отправлено на номера:');
+    for (var n in targetNumbers) {
+      print('- $n');
+    }
+  }
+
+  void info() {
+    print('Модель: $model, Номер: $number, Вес: $weight');
+  }
+}
+
+class Matrix {
+  late List<List<double>> data;
+  int rows;
+  int cols;
+
+  Matrix(this.rows, this.cols) {
+    data = List.generate(rows, (_) => List.filled(cols, 0.0));
+  }
+  Matrix add(Matrix other) {
+    if (rows != other.rows || cols != other.cols) {
+      throw Exception('Размеры матриц должны совпадать для сложения');
+    }
+    Matrix result = Matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        result.data[i][j] = data[i][j] + other.data[i][j];
+      }
+    }
+    return result;
+  }
+  Matrix multiplyByScalar(double scalar) {
+    Matrix result = Matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        result.data[i][j] = data[i][j] * scalar;
+      }
+    }
+    return result;
+  }
+
+  Matrix multiplyByMatrix(Matrix other) {
+    if (cols != other.rows) {
+      throw Exception('Кол-во столбцов первой должно быть равно кол-ву строк второй');
+    }
+    Matrix result = Matrix(rows, other.cols);
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < other.cols; j++) {
+        for (int k = 0; k < cols; k++) {
+          result.data[i][j] += data[i][k] * other.data[k][j];
+        }
+      }
+    }
+    return result;
+  }
+
+  void printMatrix() {
+    for (var row in data) {
+      print(row.map((e) => e.toStringAsFixed(1)).join('\t'));
+    }
+    print('');
+  }
+}
+
+void printRange(int a, int b) {
+  print(a);
+  if (a == b) return;
+
+  if (a < b) {
+    printRange(a + 1, b);
+  } else {
+    printRange(a - 1, b);
+  }
+}
+
+class Student {
+  String firstName;
+  String lastName;
+  String group;
+  double averageMark;
+
+  Student(this.firstName, this.lastName, this.group, this.averageMark);
+
+  int getScholarship() {
+    return averageMark == 5 ? 2000 : 1900;
+  }
+}
+
+class Aspirant extends Student {
+  String scientificWork;
+
+  Aspirant(String fName, String lName, String group, double mark, this.scientificWork)
+      : super(fName, lName, group, mark);
+
+  @override
+  int getScholarship() {
+    return averageMark == 5 ? 2500 : 2200;
+  }
+}
+
+
+void main() {
+
+  print('--- Задание 1: Phone ---');
+  var ph1 = Phone();
+  var ph2 = Phone.withTwo('8-900-111', 'iPhone');
+  var ph3 = Phone.full('8-999-222', 'Samsung', 180.5);
+
+  [ph1, ph2, ph3].forEach((p) {
+    p.info();
+    p.receiveCall('Алексей');
+    print('Получен номер: ${p.getNumber()}');
+  });
+  ph3.sendMessage(['+79001', '+79002']);
+
+  
+  print('\n--- Задание 2: Матрица ---');
+  var m1 = Matrix(2, 2)..data = [[1, 2], [3, 4]];
+  var m2 = Matrix(2, 2)..data = [[5, 6], [7, 8]];
+  print('Сумма матриц:');
+  m1.add(m2).printMatrix();
+  print('Умножение m1 на 10:');
+  m1.multiplyByScalar(10).printMatrix();
+
+
+  print('\n--- Задание 3: Рекурсия (от 5 до 2) ---');
+  printRange(5, 2);
+
+
+  print('\n--- Задание 4: Стипендии ---');
+  List<Student> university = [
+    Student('Иван', 'Иванов', 'А-1', 5.0),
+    Student('Петр', 'Сидоров', 'Б-2', 4.5),
+    Aspirant('Дмитрий', 'Ученый', 'Асп-1', 5.0, 'Искусственный интеллект'),
+    Aspirant('Анна', 'Кюри', 'Асп-2', 4.0, 'Химия'),
+  ];
+
+  for (var person in university) {
+    print('${person.lastName}: Стипендия = ${person.getScholarship()} руб.');
+  }
+}
