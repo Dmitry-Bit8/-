@@ -1,0 +1,165 @@
+import 'dart:math';
+
+// --- Часть 1: Функции высшего порядка + ООП ---
+
+class MathProcessor {
+  final List<double> numbers;
+
+  MathProcessor(this.numbers);
+
+  /// Метод принимает функцию, которая преобразует каждое число в списке
+  List<double> process(double Function(double) transformer) {
+    return numbers.map((n) => transformer(n)).toList();
+  }
+
+  /// Статический метод для генерации случайных чисел в заданном диапазоне
+  static List<double> getRandomNumbers(int count, double min, double max) {
+    final random = Random();
+    return List.generate(count, (_) => min + random.nextDouble() * (max - min));
+  }
+}
+
+// --- Часть 2: Абстрактные классы + Наследование (Геометрия) ---
+
+abstract class Shape {
+  /// Абстрактный метод для вычисления площади
+  double area();
+
+  /// Фабричный конструктор для создания объектов на основе JSON
+  factory Shape.fromJson(Map<String, dynamic> json) {
+    final type = json['type'];
+    if (type == 'circle') {
+      return Circle(json['radius'].toDouble());
+    } else if (type == 'rectangle') {
+      return Rectangle(json['width'].toDouble(), json['height'].toDouble());
+    } else {
+      throw Exception('Неизвестный тип фигуры');
+    }
+  }
+}
+
+class Circle extends Shape {
+  final double radius;
+  Circle(this.radius);
+
+  @override
+  double area() => pi * pow(radius, 2);
+
+  @override
+  String toString() => 'Круг с радиусом $radius, площадь: ${area().toStringAsFixed(2)}';
+}
+
+class Rectangle extends Shape {
+  final double width;
+  final double height;
+  Rectangle(this.width, this.height);
+
+  @override
+  double area() => width * height;
+
+  @override
+  String toString() => 'Прямоугольник ${width}x$height, площадь: ${area()}';
+}
+
+// --- Часть 3: Валидатор пароля (Статические методы и константы) ---
+
+class PasswordValidator {
+  static const int minLength = 8;
+
+  /// Проверяет пароль на длину и наличие хотя бы одной цифры
+  static bool validate(String password) {
+    bool hasDigit = password.contains(RegExp(r'\d'));
+    return password.length >= minLength && hasDigit;
+  }
+}
+
+// --- Часть 4: Банковская система ---
+
+class BankAccount {
+  final String accountNumber;
+  double _balance;
+  String ownerName;
+
+  /// Конструктор с инициализацией базовых полей
+  BankAccount(this.ownerName, this.accountNumber, [this._balance = 0.0]);
+
+  double get balance => _balance;
+
+  /// Пополнение баланса
+  void deposit(double amount) {
+    if (amount > 0) {
+      _balance += amount;
+      print('Счет $accountNumber ($ownerName) пополнен на $amount. Баланс: $_balance');
+    }
+  }
+
+  /// Снятие средств с проверкой остатка
+  bool withdraw(double amount) {
+    if (amount > 0 && _balance >= amount) {
+      _balance -= amount;
+      print('Снято $amount со счета $accountNumber. Баланс: $_balance');
+      return true;
+    }
+    print('Ошибка снятия: недостаточно средств на счете $accountNumber.');
+    return false;
+  }
+}
+
+class Bank {
+  List<BankAccount> accounts = [];
+
+  /// Добавление существующего счета в банк
+  void addAccount(BankAccount account) {
+    accounts.add(account);
+    print('Добавлен счет для пользователя: ${account.ownerName}');
+  }
+
+  /// Метод перевода между двумя счетами по их номерам
+  void transfer(String fromNum, String toNum, double amount) {
+    try {
+      var fromAcc = accounts.firstWhere((a) => a.accountNumber == fromNum);
+      var toAcc = accounts.firstWhere((a) => a.accountNumber == toNum);
+
+      if (fromAcc.withdraw(amount)) {
+        toAcc.deposit(amount);
+        print('Перевод на сумму $amount от $fromNum к $toNum выполнен успешно.');
+      }
+    } catch (e) {
+      print('Ошибка перевода: один из счетов не найден в системе.');
+    }
+  }
+}
+
+void main() {
+  print('--- Часть 1: MathProcessor ---');
+  // Генерируем 3 случайных числа от 1 до 10
+  var nums = MathProcessor.getRandomNumbers(3, 1, 10);
+  var processor = MathProcessor(nums);
+  print('Исходные числа: $nums');
+  // Возводим в квадрат через функцию высшего порядка
+  var squares = processor.process((n) => n * n);
+  print('Квадраты: $squares');
+
+  print('\n--- Часть 2: Геометрия ---');
+  var circleJson = {'type': 'circle', 'radius': 5.0};
+  var myCircle = Shape.fromJson(circleJson);
+  print(myCircle);
+
+  print('\n--- Часть 3: Валидация пароля ---');
+  print('Пароль "12345": ${PasswordValidator.validate("12345") ? "ОК" : "Слабый"}');
+  print('Пароль "Qwerty789": ${PasswordValidator.validate("Qwerty789") ? "ОК" : "Слабый"}');
+
+  print('\n--- Часть 4: Банковская система ---');
+  var myBank = Bank();
+  var acc1 = BankAccount('Дмитрий', 'AX100', 1000.0);
+  var acc2 = BankAccount('Иван', 'BY200', 500.0);
+
+  myBank.addAccount(acc1);
+  myBank.addAccount(acc2);
+
+  // Выполняем перевод
+  myBank.transfer('AX100', 'BY200', 300.0);
+
+  print('Итоговый баланс Дмитрия: ${acc1.balance}');
+  print('Итоговый баланс Ивана: ${acc2.balance}');
+}
